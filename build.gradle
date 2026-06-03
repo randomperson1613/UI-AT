@@ -65,6 +65,25 @@ test {
     ignoreFailures = false
     useJUnitPlatform()
     jvmArgs = [ "-javaagent:${configurations.agent.singleFile}" ]
+
+    [
+            "baseUrl",
+            "browser",
+            "browserVersion",
+            "browserSize",
+            "remote",
+            "headless",
+            "timeout",
+            "pageLoadTimeout",
+            "pageLoadStrategy",
+            "reportsFolder",
+            "downloadsFolder"
+    ].each { propertyName ->
+        if (System.getProperty(propertyName) != null) {
+            systemProperty propertyName, System.getProperty(propertyName)
+        }
+    }
+
     systemProperty "org.slf4j.simpleLogger.defaultLogLevel", "warn"
 
     testLogging {
