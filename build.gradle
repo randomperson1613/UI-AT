@@ -77,7 +77,8 @@ test {
             "pageLoadTimeout",
             "pageLoadStrategy",
             "reportsFolder",
-            "downloadsFolder"
+            "downloadsFolder",
+            "chromeNoSandbox"
     ].each { propertyName ->
         if (System.getProperty(propertyName) != null) {
             systemProperty propertyName, System.getProperty(propertyName)
