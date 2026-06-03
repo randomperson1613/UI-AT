@@ -1,0 +1,75 @@
+plugins {
+    id 'java'
+    id 'io.qameta.allure' version '4.0.2'
+}
+
+wrapper {
+    gradleVersion = '8.10.2'
+}
+
+repositories {
+    mavenCentral()
+}
+
+group = 'ru.at.ui'
+version = '1.0-SNAPSHOT'
+
+def selenideVersion = '7.16.2'
+def allureAdaptersVersion = '2.35.2'
+def allureCommandlineVersion = '2.42.0'
+def aspectJVersion = '1.9.25'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.compilerArgs.add('-parameters')
+}
+
+configurations {
+    agent {
+        canBeResolved = true
+        canBeConsumed = true
+    }
+}
+
+dependencies {
+    agent "org.aspectj:aspectjweaver:$aspectJVersion"
+
+    testImplementation platform("io.qameta.allure:allure-bom:$allureAdaptersVersion")
+    testImplementation "io.qameta.allure:allure-junit5"
+    testImplementation "io.qameta.allure:allure-selenide"
+
+    testImplementation platform("org.junit:junit-bom:5.14.4")
+    testImplementation "org.junit.jupiter:junit-jupiter"
+
+    testImplementation "com.codeborne:selenide:$selenideVersion"
+
+    testImplementation "org.slf4j:slf4j-simple:2.0.16"
+}
+
+allure {
+    version = allureCommandlineVersion
+    adapter {
+        allureJavaVersion = allureAdaptersVersion
+        aspectjVersion = aspectJVersion
+        resultsDir = layout.buildDirectory.dir("allure-results")
+    }
+}
+
+test {
+    ignoreFailures = false
+    useJUnitPlatform()
+    jvmArgs = [ "-javaagent:${configurations.agent.singleFile}" ]
+    systemProperty "org.slf4j.simpleLogger.defaultLogLevel", "warn"
+
+    testLogging {
+        events "passed", "skipped", "failed"
+        showStandardStreams = false
+        exceptionFormat = "full"
+    }
+}
