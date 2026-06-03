@@ -36,7 +36,7 @@ pipeline {
 
         stage('UI Tests') {
             steps {
-                sh './gradlew clean test -Dheadless=true -Dbrowser=chrome --no-daemon'
+                sh './gradlew clean test -Dheadless=true -Dbrowser=chrome -DchromeNoSandbox=true --no-daemon'
             }
         }
     }
