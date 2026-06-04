@@ -85,12 +85,12 @@ pipeline {
                                     set +x
                                     set -eu
                                     ./gradlew clean test \
-                                      -Dremote="${SELENOID_URL}" \
-                                      -Dbrowser="${BROWSER}" \
-                                      -DbrowserVersion="${BROWSER_VERSION}" \
-                                      -DbrowserSize="${BROWSER_SIZE}" \
-                                      -Dheadless="${HEADLESS}" \
-                                      -DenableVideo="${ENABLE_VIDEO}" \
+                                      -Dremote="${SELENOID_URL:-https://selenoid.autotests.cloud/wd/hub}" \
+                                      -Dbrowser="${BROWSER:-chrome}" \
+                                      -DbrowserVersion="${BROWSER_VERSION:-}" \
+                                      -DbrowserSize="${BROWSER_SIZE:-1920x1080}" \
+                                      -Dheadless="${HEADLESS:-false}" \
+                                      -DenableVideo="${ENABLE_VIDEO:-true}" \
                                       -DsessionName="${JOB_NAME} #${BUILD_NUMBER}" \
                                       --no-daemon
                                 '''
@@ -106,10 +106,10 @@ pipeline {
                             sh '''
                                 set -eu
                                 ./gradlew clean test \
-                                  -Dbrowser="${BROWSER}" \
-                                  -DbrowserVersion="${BROWSER_VERSION}" \
-                                  -DbrowserSize="${BROWSER_SIZE}" \
-                                  -Dheadless="${HEADLESS}" \
+                                  -Dbrowser="${BROWSER:-chrome}" \
+                                  -DbrowserVersion="${BROWSER_VERSION:-}" \
+                                  -DbrowserSize="${BROWSER_SIZE:-1920x1080}" \
+                                  -Dheadless="${HEADLESS:-true}" \
                                   -DchromeNoSandbox=true \
                                   --no-daemon
                             '''
