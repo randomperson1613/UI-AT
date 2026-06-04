@@ -63,8 +63,8 @@ pipeline {
             if (fileExists('build/reports/allure-report/allureReport/widgets/summary.json')) {
                 catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
                     withCredentials([
-                            string(credentialsId: 'telegram-bot-token', variable: 'TELEGRAM_BOT_TOKEN'),
-                            string(credentialsId: 'telegram-chat-id', variable: 'TELEGRAM_CHAT_ID')
+                            string(credentialsId: 'telegram-bot-token-rodneystone', variable: 'TELEGRAM_BOT_TOKEN'),
+                            string(credentialsId: 'telegram-chat-id-rodneystone', variable: 'TELEGRAM_CHAT_ID')
                     ]) {
                         sh '''
                             set -eu
