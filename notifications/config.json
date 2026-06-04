@@ -1,0 +1,21 @@
+{
+  "base": {
+    "logo": "",
+    "project": "ui-at",
+    "environment": "practice.expandtesting.com",
+    "comment": "UI autotests",
+    "reportLink": "",
+    "language": "ru",
+    "allureFolder": "build/reports/allure-report/allureReport",
+    "enableChart": true,
+    "enableSuitesPublishing": false,
+    "customData": {}
+  },
+  "telegram": {
+    "token": "",
+    "chat": "",
+    "topic": "",
+    "replyTo": "",
+    "templatePath": "/templates/telegram.ftl"
+  }
+}
