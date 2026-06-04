@@ -42,15 +42,46 @@ pipeline {
     }
 
     post {
-        always {
-            junit testResults: 'build/test-results/test/*.xml', allowEmptyResults: true
+    always {
+        junit testResults: 'build/test-results/test/*.xml', allowEmptyResults: true
 
-            allure includeProperties: false,
-                   jdk: '',
-                   results: [[path: 'build/allure-results']]
+        script {
+            int allureReportStatus = sh(script: './gradlew allureReport --no-daemon', returnStatus: true)
+            if (allureReportStatus != 0) {
+                echo 'Allure HTML report was not generated; Telegram notification can be skipped.'
+            }
+        }
 
-            archiveArtifacts artifacts: 'build/reports/tests/test/**, build/selenide/**, build/allure-results/**',
-                             allowEmptyArchive: true
+        allure includeProperties: false,
+               jdk: '',
+               results: [[path: 'build/allure-results']]
+
+        archiveArtifacts artifacts: 'build/reports/tests/test/**, build/selenide/**, build/allure-results/**, build/reports/allure-report/**',
+                         allowEmptyArchive: true
+
+        script {
+            if (fileExists('build/reports/allure-report/allureReport/widgets/summary.json')) {
+                catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+                    withCredentials([
+                            string(credentialsId: 'telegram-bot-token', variable: 'TELEGRAM_BOT_TOKEN'),
+                            string(credentialsId: 'telegram-chat-id', variable: 'TELEGRAM_CHAT_ID')
+                    ]) {
+                        sh '''
+                            set -eu
+                            java \
+                              "-DconfigFile=notifications/config.json" \
+                              "-Dnotifications.base.project=${JOB_BASE_NAME}" \
+                              "-Dnotifications.base.reportLink=${BUILD_URL}allure/" \
+                              "-Dnotifications.telegram.token=${TELEGRAM_BOT_TOKEN}" \
+                              "-Dnotifications.telegram.chat=${TELEGRAM_CHAT_ID}" \
+                              -jar notifications/allure-notifications-4.11.0.jar
+                        '''
+                    }
+                }
+            } else {
+                echo 'Allure summary.json not found; Telegram notification skipped.'
+            }
         }
     }
+}
 }
