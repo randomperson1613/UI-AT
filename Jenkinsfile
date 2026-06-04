@@ -38,7 +38,8 @@ pipeline {
                 '''
 
                 script {
-                    if (params.REMOTE_DRIVER) {
+                    boolean remoteDriver = params.REMOTE_DRIVER == null ? true : params.REMOTE_DRIVER
+                    if (remoteDriver) {
                         echo 'Remote Selenoid run is enabled; local Chrome check skipped.'
                     } else {
                         sh '''
@@ -57,37 +58,62 @@ pipeline {
         stage('UI Tests') {
             steps {
                 script {
-                    if (params.REMOTE_DRIVER) {
+                    boolean remoteDriver = params.REMOTE_DRIVER == null ? true : params.REMOTE_DRIVER
+                    String browser = params.BROWSER?.trim() ?: 'chrome'
+                    String browserVersion = params.BROWSER_VERSION?.trim() ?: ''
+                    String browserSize = params.BROWSER_SIZE?.trim() ?: '1920x1080'
+                    boolean headless = params.HEADLESS == null ? false : params.HEADLESS
+                    boolean enableVideo = params.ENABLE_VIDEO == null ? true : params.ENABLE_VIDEO
+
+                    if (remoteDriver) {
+                        String selenoidUrl = params.SELENOID_URL?.trim() ?: 'https://selenoid.autotests.cloud/wd/hub'
+
                         withCredentials([
                                 usernamePassword(credentialsId: 'selenoid-autotests-cloud',
                                         usernameVariable: 'REMOTE_USER',
                                         passwordVariable: 'REMOTE_PASSWORD')
                         ]) {
+                            withEnv([
+                                    "SELENOID_URL=${selenoidUrl}",
+                                    "BROWSER=${browser}",
+                                    "BROWSER_VERSION=${browserVersion}",
+                                    "BROWSER_SIZE=${browserSize}",
+                                    "HEADLESS=${headless}",
+                                    "ENABLE_VIDEO=${enableVideo}"
+                            ]) {
+                                sh '''
+                                    set +x
+                                    set -eu
+                                    ./gradlew clean test \
+                                      -Dremote="${SELENOID_URL}" \
+                                      -Dbrowser="${BROWSER}" \
+                                      -DbrowserVersion="${BROWSER_VERSION}" \
+                                      -DbrowserSize="${BROWSER_SIZE}" \
+                                      -Dheadless="${HEADLESS}" \
+                                      -DenableVideo="${ENABLE_VIDEO}" \
+                                      -DsessionName="${JOB_NAME} #${BUILD_NUMBER}" \
+                                      --no-daemon
+                                '''
+                            }
+                        }
+                    } else {
+                        withEnv([
+                                "BROWSER=${browser}",
+                                "BROWSER_VERSION=${browserVersion}",
+                                "BROWSER_SIZE=${browserSize}",
+                                "HEADLESS=${headless}"
+                        ]) {
                             sh '''
-                                set +x
                                 set -eu
                                 ./gradlew clean test \
-                                  -Dremote="${SELENOID_URL}" \
                                   -Dbrowser="${BROWSER}" \
                                   -DbrowserVersion="${BROWSER_VERSION}" \
                                   -DbrowserSize="${BROWSER_SIZE}" \
                                   -Dheadless="${HEADLESS}" \
-                                  -DenableVideo="${ENABLE_VIDEO}" \
-                                  -DsessionName="${JOB_NAME} #${BUILD_NUMBER}" \
+                                  -DchromeNoSandbox=true \
                                   --no-daemon
                             '''
                         }
-                    } else {
-                        sh '''
-                            set -eu
-                            ./gradlew clean test \
-                              -Dbrowser="${BROWSER}" \
-                              -DbrowserVersion="${BROWSER_VERSION}" \
-                              -DbrowserSize="${BROWSER_SIZE}" \
-                              -Dheadless="${HEADLESS}" \
-                              -DchromeNoSandbox=true \
-                              --no-daemon
-                        '''
                     }
                 }
             }
