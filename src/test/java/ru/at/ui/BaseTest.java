@@ -9,7 +9,10 @@ import org.junit.jupiter.api.BeforeAll;
 import org.openqa.selenium.MutableCapabilities;
 import org.openqa.selenium.chrome.ChromeOptions;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 import static ru.at.ui.helpers.AllureAttachments.attachBrowserConsoleLogs;
@@ -40,7 +43,7 @@ public abstract class BaseTest {
 
         String remote = getProperty("remote", "");
         if (!remote.isBlank()) {
-            Configuration.remote = remote;
+            Configuration.remote = withBasicAuth(remote, getProperty("remoteUser", ""), getProperty("remotePassword", ""));
             enableSelenoidCapabilities(browserCapabilities);
         }
 
@@ -65,7 +68,22 @@ public abstract class BaseTest {
     }
 
     private static String getProperty(String key, String defaultValue) {
-        return System.getProperty(key, System.getProperty("selenide." + key, defaultValue));
+        String value = System.getProperty(key);
+        if (value != null) {
+            return value;
+        }
+
+        value = System.getProperty("selenide." + key);
+        if (value != null) {
+            return value;
+        }
+
+        value = System.getenv(toEnvironmentVariableName(key));
+        return value == null ? defaultValue : value;
+    }
+
+    private static String toEnvironmentVariableName(String key) {
+        return key.replaceAll("([a-z])([A-Z])", "$1_$2").toUpperCase(Locale.ROOT);
     }
 
     private static MutableCapabilities configureBrowserCapabilities() {
@@ -76,6 +94,16 @@ public abstract class BaseTest {
         ChromeOptions options = new ChromeOptions();
         options.addArguments("--disable-dev-shm-usage");
 
+        if (Boolean.parseBoolean(getProperty("blockAds", "true"))) {
+            options.addArguments("--host-resolver-rules="
+                    + "MAP *.doubleclick.net 0.0.0.0,"
+                    + "MAP *.googlesyndication.com 0.0.0.0,"
+                    + "MAP *.googleadservices.com 0.0.0.0,"
+                    + "MAP googleads.g.doubleclick.net 0.0.0.0,"
+                    + "MAP adservice.google.com 0.0.0.0,"
+                    + "EXCLUDE localhost");
+        }
+
         if (Boolean.parseBoolean(getProperty("chromeNoSandbox", "false"))) {
             options.addArguments("--no-sandbox");
         }
@@ -84,12 +112,48 @@ public abstract class BaseTest {
     }
 
     private static void enableSelenoidCapabilities(MutableCapabilities capabilities) {
-        capabilities.setCapability("enableVNC", true);
-        capabilities.setCapability("enableVideo", true);
+        boolean enableVnc = Boolean.parseBoolean(getProperty("enableVnc", "true"));
+        boolean enableVideo = Boolean.parseBoolean(getProperty("enableVideo", "true"));
 
         Map<String, Object> selenoidOptions = new HashMap<>();
-        selenoidOptions.put("enableVNC", true);
-        selenoidOptions.put("enableVideo", true);
+        selenoidOptions.put("enableVNC", enableVnc);
+        selenoidOptions.put("enableVideo", enableVideo);
+
+        String sessionName = getProperty("sessionName", "");
+        if (!sessionName.isBlank()) {
+            selenoidOptions.put("name", sessionName);
+        }
+
         capabilities.setCapability("selenoid:options", selenoidOptions);
+    }
+
+    private static String withBasicAuth(String remote, String username, String password) {
+        if (username.isBlank() || password.isBlank()) {
+            return remote;
+        }
+
+        try {
+            URI uri = new URI(remote);
+            if (uri.getUserInfo() != null || uri.getHost() == null || uri.getScheme() == null) {
+                return remote;
+            }
+
+            String path = uri.getPath();
+            if (path == null || path.isBlank()) {
+                path = "/";
+            }
+
+            return new URI(
+                    uri.getScheme(),
+                    username + ":" + password,
+                    uri.getHost(),
+                    uri.getPort(),
+                    path,
+                    uri.getQuery(),
+                    uri.getFragment()
+            ).toString();
+        } catch (URISyntaxException | IllegalArgumentException ignored) {
+            return remote;
+        }
     }
 }
