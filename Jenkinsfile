@@ -141,19 +141,23 @@ pipeline {
             script {
                 if (fileExists('build/reports/allure-report/allureReport/widgets/summary.json')) {
                     catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+                        String buildUrl = env.BUILD_URL?.trim() ?: ''
+                        String allureReportLink = buildUrl.replaceAll('/+$', '').replaceAll('(/allure)+$', '') + '/allure'
+
                         withCredentials([
                                 string(credentialsId: 'telegram-bot-token-rodneystone', variable: 'TELEGRAM_BOT_TOKEN'),
                                 string(credentialsId: 'telegram-chat-id-rodneystone', variable: 'TELEGRAM_CHAT_ID')
                         ]) {
-                            sh '''
-                                set -eu
-                                cat > notifications/config-runtime.json <<EOF
+                            withEnv(["ALLURE_REPORT_LINK=${allureReportLink}"]) {
+                                sh '''
+                                    set -eu
+                                    cat > notifications/config-runtime.json <<EOF
 {
   "base": {
     "project": "${JOB_BASE_NAME}",
     "environment": "practice.expandtesting.com",
     "comment": "UI autotests",
-    "reportLink": "${BUILD_URL}allure/",
+    "reportLink": "${ALLURE_REPORT_LINK}",
     "language": "ru",
     "allureFolder": "build/reports/allure-report/allureReport",
     "enableChart": true,
@@ -169,9 +173,10 @@ pipeline {
 }
 EOF
 
-                                java "-DconfigFile=notifications/config-runtime.json" \
-                                  -jar notifications/allure-notifications-4.11.0.jar
-                            '''
+                                    java "-DconfigFile=notifications/config-runtime.json" \
+                                      -jar notifications/allure-notifications-4.11.0.jar
+                                '''
+                            }
                         }
                     }
                 } else {
