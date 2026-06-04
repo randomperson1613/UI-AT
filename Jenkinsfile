@@ -7,6 +7,16 @@ pipeline {
         buildDiscarder(logRotator(numToKeepStr: '20', artifactNumToKeepStr: '10'))
     }
 
+    parameters {
+        booleanParam(name: 'REMOTE_DRIVER', defaultValue: true, description: 'Run tests in Selenoid instead of local Chrome')
+        string(name: 'SELENOID_URL', defaultValue: 'https://selenoid.autotests.cloud/wd/hub', description: 'Remote WebDriver URL without credentials')
+        string(name: 'BROWSER', defaultValue: 'chrome', description: 'Browser name')
+        string(name: 'BROWSER_VERSION', defaultValue: '', description: 'Browser version in Selenoid; leave empty to use default')
+        string(name: 'BROWSER_SIZE', defaultValue: '1920x1080', description: 'Browser window size')
+        booleanParam(name: 'HEADLESS', defaultValue: false, description: 'Use false for Selenoid video; true is useful for local CI Chrome')
+        booleanParam(name: 'ENABLE_VIDEO', defaultValue: true, description: 'Enable Selenoid video recording')
+    }
+
     environment {
         GRADLE_USER_HOME = "${WORKSPACE}/.gradle"
     }
@@ -24,19 +34,62 @@ pipeline {
                     set -eu
                     java -version
                     javac -version
-                    if command -v google-chrome >/dev/null 2>&1; then
-                        google-chrome --version
-                    else
-                        google-chrome-stable --version
-                    fi
                     chmod +x ./gradlew
                 '''
+
+                script {
+                    if (params.REMOTE_DRIVER) {
+                        echo 'Remote Selenoid run is enabled; local Chrome check skipped.'
+                    } else {
+                        sh '''
+                            set -eu
+                            if command -v google-chrome >/dev/null 2>&1; then
+                                google-chrome --version
+                            else
+                                google-chrome-stable --version
+                            fi
+                        '''
+                    }
+                }
             }
         }
 
         stage('UI Tests') {
             steps {
-                sh './gradlew clean test -Dheadless=true -Dbrowser=chrome -DchromeNoSandbox=true --no-daemon'
+                script {
+                    if (params.REMOTE_DRIVER) {
+                        withCredentials([
+                                usernamePassword(credentialsId: 'selenoid-autotests-cloud',
+                                        usernameVariable: 'REMOTE_USER',
+                                        passwordVariable: 'REMOTE_PASSWORD')
+                        ]) {
+                            sh '''
+                                set +x
+                                set -eu
+                                ./gradlew clean test \
+                                  -Dremote="${SELENOID_URL}" \
+                                  -Dbrowser="${BROWSER}" \
+                                  -DbrowserVersion="${BROWSER_VERSION}" \
+                                  -DbrowserSize="${BROWSER_SIZE}" \
+                                  -Dheadless="${HEADLESS}" \
+                                  -DenableVideo="${ENABLE_VIDEO}" \
+                                  -DsessionName="${JOB_NAME} #${BUILD_NUMBER}" \
+                                  --no-daemon
+                            '''
+                        }
+                    } else {
+                        sh '''
+                            set -eu
+                            ./gradlew clean test \
+                              -Dbrowser="${BROWSER}" \
+                              -DbrowserVersion="${BROWSER_VERSION}" \
+                              -DbrowserSize="${BROWSER_SIZE}" \
+                              -Dheadless="${HEADLESS}" \
+                              -DchromeNoSandbox=true \
+                              --no-daemon
+                        '''
+                    }
+                }
             }
         }
     }
