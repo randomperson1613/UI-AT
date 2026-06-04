@@ -1,0 +1,19 @@
+{
+  "base": {
+    "project": "ui-at",
+    "environment": "practice.expandtesting.com",
+    "comment": "UI autotests",
+    "reportLink": "http://jenkins/job/ui-at/allure/",
+    "language": "ru",
+    "allureFolder": "build/reports/allure-report/allureReport",
+    "enableChart": true,
+    "enableSuitesPublishing": false,
+    "customData": {}
+  },
+  "telegram": {
+    "token": "bad",
+    "chat": "8291952031",
+    "replyTo": "",
+    "templatePath": "/templates/telegram.ftl"
+  }
+}
