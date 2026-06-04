@@ -67,12 +67,20 @@ src/test/resources/upload/diploma-upload.txt     # файл для провер�
 | `browserVersion` | пусто | Версия браузера, обычно используется для Selenoid |
 | `browserSize` | `1920x1080` | Размер окна браузера |
 | `remote` | пусто | Remote WebDriver URL, например Selenoid |
+| `remoteUser` | пусто | Логин для remote URL; также можно передать через `REMOTE_USER` |
+| `remotePassword` | пусто | Пароль для remote URL; также можно передать через `REMOTE_PASSWORD` |
 | `headless` | `false` | Запуск без UI браузера |
 | `timeout` | `10000` | Таймаут ожиданий Selenide в миллисекундах |
 | `pageLoadTimeout` | `30000` | Таймаут загрузки страницы в миллисекундах |
 | `pageLoadStrategy` | `normal` | Стратегия загрузки страницы Selenium |
 | `reportsFolder` | `build/selenide/reports` | Папка отчётов Selenide |
 | `downloadsFolder` | `build/selenide/downloads` | Папка скачанных файлов |
+| `chromeNoSandbox` | `false` | Добавляет Chrome-аргумент `--no-sandbox` |
+| `blockAds` | `true` | Блокирует рекламные домены через Chrome host resolver rules |
+| `enableVnc` | `true` | Включает VNC capability для Selenoid |
+| `enableVideo` | `true` | Включает запись видео в Selenoid |
+| `videoBaseUrl` | пусто | Базовый URL для ссылки на видео; если не задан, берётся из `remote` без логина и пароля |
+| `sessionName` | пусто | Имя сессии в Selenoid UI |
 
 Пример запуска с переопределением параметров:
 
@@ -92,17 +100,26 @@ src/test/resources/upload/diploma-upload.txt     # файл для провер�
 
 ## Запуск через Selenoid
 
-Пример запуска через Selenoid:
+В `remote` нужно передавать WebDriver endpoint. Для `selenoid.autotests.cloud` это URL с `/wd/hub`:
 
 ```bash
-./gradlew clean test \
-  -Dremote=http://localhost:4444/wd/hub \
-  -Dbrowser=chrome \
-  -DbrowserVersion=125.0 \
-  -DbrowserSize=1920x1080
+https://selenoid.autotests.cloud/wd/hub
 ```
 
-При наличии `remote` проект автоматически добавляет capabilities для Selenoid:
+Локальный запуск без записи логина и пароля в команду:
+
+```bash
+export REMOTE_USER=user1
+export REMOTE_PASSWORD=1234
+
+./gradlew clean test \
+  -Dremote=https://selenoid.autotests.cloud/wd/hub \
+  -Dbrowser=chrome \
+  -DbrowserSize=1920x1080 \
+  -DenableVideo=true
+```
+
+При наличии `remote` проект автоматически добавляет capability `selenoid:options` для Selenoid:
 
 - `enableVNC=true`
 - `enableVideo=true`
@@ -110,6 +127,18 @@ src/test/resources/upload/diploma-upload.txt     # файл для провер�
 После каждого теста в Allure добавляются скриншот страницы, HTML страницы и логи браузера.
 Видео прохождения теста добавляется только при запуске через Selenoid с параметром `remote`, потому что локальный WebDriver не создает видео-артефакт.
 Если `remote` не передан, видео не прикладывается, а остальные вложения остаются доступными.
+
+Если нужно передать URL одной строкой, рабочий формат такой:
+
+```bash
+./gradlew clean test \
+  -Dremote=https://user1:1234@selenoid.autotests.cloud/wd/hub \
+  -Dbrowser=chrome \
+  -DenableVideo=true
+```
+
+Для Jenkins лучше использовать `REMOTE_USER` и `REMOTE_PASSWORD` из Jenkins Credentials, а не хранить логин и пароль в репозитории.
+По умолчанию логин и пароль не попадают в HTML-вложение Allure с видео. Если ваш Selenoid закрывает `/video/...` basic auth, настройте отдельный публичный/proxy URL через `-DvideoBaseUrl=...` или задайте credentialed `videoBaseUrl` осознанно.
 
 ## Отчёты
 
@@ -147,6 +176,45 @@ build/reports/allure-report/allureReport
 
 ```bash
 ./gradlew allureServe
+```
+
+## Jenkins и Selenoid
+
+`Jenkinsfile` запускает тесты через Selenoid по умолчанию. Для этого в Jenkins нужно создать credential:
+
+- Kind: `Username with password`.
+- ID: `selenoid-autotests-cloud`.
+- Username: `user1`.
+- Password: `1234`.
+
+Параметры job:
+
+- `REMOTE_DRIVER=true` - запускать тесты через Selenoid.
+- `SELENOID_URL=https://selenoid.autotests.cloud/wd/hub` - URL без логина и пароля.
+- `BROWSER=chrome`.
+- `BROWSER_VERSION` - можно оставить пустым, тогда используется версия по умолчанию на Selenoid.
+- `BROWSER_SIZE=1920x1080`.
+- `HEADLESS=false` - для видео в Selenoid лучше оставлять `false`.
+- `ENABLE_VIDEO=true`.
+
+Для локального запуска на Jenkins-agent без Selenoid установите `REMOTE_DRIVER=false` и `HEADLESS=true`; тогда агенту нужен установленный Chrome.
+
+## Telegram-уведомления в Jenkins
+
+После выполнения тестов Jenkins генерирует Allure HTML-отчёт и запускает
+`notifications/allure-notifications-4.11.0.jar`. Конфиг лежит в
+`notifications/config.json`, но токен бота и chat id в него не записываются.
+
+В Jenkins создайте два `Secret text` credentials:
+
+- `telegram-bot-token-rodneystone` - токен Telegram-бота.
+- `telegram-chat-id-rodneystone` - id чата, куда бот отправляет отчёт.
+
+После этого запустите job. Уведомление будет отправлено из блока `post` в
+`Jenkinsfile`, если найден файл:
+
+```text
+build/reports/allure-report/allureReport/widgets/summary.json
 ```
 
 ## Allure-разметка
