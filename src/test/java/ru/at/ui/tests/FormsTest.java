@@ -14,14 +14,15 @@ import ru.at.ui.pages.DropdownPage;
 import ru.at.ui.pages.FileUploadPage;
 import ru.at.ui.pages.InputsPage;
 
+import static ru.at.ui.data.TestData.UPLOAD_FILE_NAME;
+import static ru.at.ui.data.TestData.UPLOAD_FIXTURE;
+
 @Epic("UI-тесты ExpandTesting")
 @Feature("Формы и ввод данных")
 @Story("Обработка пользовательских данных")
 @Tag("ui")
+@Owner("kiber-kot")
 public class FormsTest extends BaseTest {
-
-    private static final String UPLOAD_FIXTURE = "upload/diploma-upload.txt";
-    private static final String UPLOAD_FILE_NAME = "diploma-upload.txt";
 
     private final InputsPage inputsPage = new InputsPage();
     private final DropdownPage dropdownPage = new DropdownPage();
@@ -29,7 +30,6 @@ public class FormsTest extends BaseTest {
 
     @Test
     @DisplayName("Введённые значения отображаются в блоке результата")
-    @Owner("kiber-kot")
     @Severity(SeverityLevel.NORMAL)
     void shouldDisplayInputValues() {
         inputsPage.openPage()
@@ -41,7 +41,6 @@ public class FormsTest extends BaseTest {
 
     @Test
     @DisplayName("Введённые значения можно очистить")
-    @Owner("kiber-kot")
     @Severity(SeverityLevel.NORMAL)
     void shouldClearInputValues() {
         inputsPage.openPage()
@@ -53,7 +52,6 @@ public class FormsTest extends BaseTest {
 
     @Test
     @DisplayName("Значения в выпадающих списках можно выбрать")
-    @Owner("kiber-kot")
     @Severity(SeverityLevel.NORMAL)
     void shouldSelectDropdownValues() {
         dropdownPage.openPage()
@@ -68,7 +66,6 @@ public class FormsTest extends BaseTest {
 
     @Test
     @DisplayName("Файл небольшого размера можно загрузить")
-    @Owner("kiber-kot")
     @Severity(SeverityLevel.CRITICAL)
     void shouldUploadSmallFile() {
         fileUploadPage.openPage()

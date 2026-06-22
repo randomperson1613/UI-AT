@@ -19,6 +19,7 @@ import ru.at.ui.pages.TablesPage;
 @Feature("Интерактивные элементы")
 @Story("Изменение DOM и работа с виджетами")
 @Tag("ui")
+@Owner("kiber-kot")
 public class ElementsTest extends BaseTest {
 
     private final CheckboxesPage checkboxesPage = new CheckboxesPage();
@@ -28,7 +29,6 @@ public class ElementsTest extends BaseTest {
 
     @Test
     @DisplayName("Состояния чекбоксов можно изменить")
-    @Owner("kiber-kot")
     @Severity(SeverityLevel.NORMAL)
     void shouldChangeCheckboxStates() {
         checkboxesPage.openPage()
@@ -43,7 +43,6 @@ public class ElementsTest extends BaseTest {
 
     @Test
     @DisplayName("Динамические элементы можно добавить и удалить")
-    @Owner("kiber-kot")
     @Severity(SeverityLevel.NORMAL)
     void shouldAddAndRemoveElements() {
         addRemoveElementsPage.openPage()
@@ -57,7 +56,6 @@ public class ElementsTest extends BaseTest {
 
     @Test
     @DisplayName("Динамические контролы изменяются асинхронно")
-    @Owner("kiber-kot")
     @Severity(SeverityLevel.CRITICAL)
     void shouldHandleDynamicControls() {
         dynamicControlsPage.openPage()
@@ -71,7 +69,6 @@ public class ElementsTest extends BaseTest {
 
     @Test
     @DisplayName("Таблица пользователей содержит ожидаемые бизнес-данные")
-    @Owner("kiber-kot")
     @Severity(SeverityLevel.MINOR)
     void shouldReadUsersTableData() {
         tablesPage.openPage()

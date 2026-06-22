@@ -14,12 +14,17 @@ import ru.at.ui.pages.LoginPage;
 import ru.at.ui.pages.RegisterPage;
 import ru.at.ui.pages.SecurePage;
 
-import java.util.UUID;
+import static ru.at.ui.data.TestData.INVALID_LOGIN_PASSWORD;
+import static ru.at.ui.data.TestData.LOGIN_PASSWORD;
+import static ru.at.ui.data.TestData.LOGIN_USERNAME;
+import static ru.at.ui.data.TestData.REGISTRATION_PASSWORD;
+import static ru.at.ui.data.TestData.randomRegistrationUsername;
 
 @Epic("UI-тесты ExpandTesting")
 @Feature("Авторизация")
 @Story("Вход и регистрация пользователя")
 @Tag("ui")
+@Owner("kiber-kot")
 public class AuthTest extends BaseTest {
 
     private final LoginPage loginPage = new LoginPage();
@@ -28,12 +33,11 @@ public class AuthTest extends BaseTest {
 
     @Test
     @DisplayName("Пользователь может войти с валидными учётными данными")
-    @Owner("kiber-kot")
     @Severity(SeverityLevel.CRITICAL)
     void shouldLoginWithValidCredentials() {
         loginPage.openPage()
                 .shouldBeOpened()
-                .login("practice", "SuperSecretPassword!");
+                .login(LOGIN_USERNAME, LOGIN_PASSWORD);
 
         securePage.shouldBeOpened()
                 .shouldHaveSuccessfulLoginMessage();
@@ -41,26 +45,23 @@ public class AuthTest extends BaseTest {
 
     @Test
     @DisplayName("Пользователь видит ошибку при неверном пароле")
-    @Owner("kiber-kot")
     @Severity(SeverityLevel.CRITICAL)
     void shouldShowErrorForInvalidPassword() {
         loginPage.openPage()
                 .shouldBeOpened()
-                .login("practice", "WrongPassword")
+                .login(LOGIN_USERNAME, INVALID_LOGIN_PASSWORD)
                 .shouldHaveErrorMessage("Your password is invalid!");
     }
 
     @Test
     @DisplayName("Новый пользователь может зарегистрироваться")
-    @Owner("kiber-kot")
     @Severity(SeverityLevel.NORMAL)
     void shouldRegisterNewUser() {
-        String username = "diploma" + UUID.randomUUID().toString().replace("-", "").substring(0, 10);
-        String password = "StrongPassword123!";
+        String username = randomRegistrationUsername();
 
         registerPage.openPage()
                 .shouldBeOpened()
-                .register(username, password, password)
+                .register(username, REGISTRATION_PASSWORD, REGISTRATION_PASSWORD)
                 .shouldHaveSuccessfulRegistrationMessage();
 
         loginPage.shouldBeOpened();
