@@ -1,5 +1,7 @@
 # Проект по автоматизации тестирования UI practice.expandtesting.com
-<img width="191" height="82" alt="image" src="https://github.com/user-attachments/assets/9788d0b2-c4ab-46be-958e-a9e3864a54f6" />
+
+<img width="1124" height="300" alt="image" src="https://github.com/user-attachments/assets/5ae95d1c-21f7-4da9-a029-8c54794900f4" />
+
 
 
 > Проект включает в себя UI-автотесты для учебного сайта practice.expandtesting.com, с использованием современного стека технологий, интеграцией в CI/CD процессы и подключением отчётности.
