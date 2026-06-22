@@ -55,5 +55,11 @@
 <!-- ![Telegram Notification](docs/images/telegram-notification.png) -->
 <img width="1255" height="558" alt="image" src="https://github.com/user-attachments/assets/cbe75085-ce90-4f26-9896-8b8716c0a2b6" />
 
+## 📹 Скринкаст прохождения теста 
+
+https://github.com/user-attachments/assets/8c2e799f-aeaa-47b3-91b0-ee478abbde66
+
+
+
 
 ---
