@@ -9,7 +9,7 @@
 ## 🔗 Ссылки на проект и инфраструктуру
 
 - Тестируемый сайт: [practice.expandtesting.com](https://practice.expandtesting.com)
-- (https://jenkins.autotests.cloud/job/40-rodneystone-diplom-ui/)](https://jenkins.autotests.cloud/job/40-rodneystone-diplom/)
+- (https://jenkins.autotests.cloud/job/40-rodneystone-diplom/)
 - [Отчет в Allure Report](https://jenkins.autotests.cloud/job/40-rodneystone-diplom-ui/7/allure/)
 - Telegram бот: [@rodneystone-at-bot](https://t.me/rodneystone-at-bot)
 
